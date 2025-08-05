@@ -1,0 +1,21 @@
+- name: Build Grafana
+  shell: |
+    mkdir -p /opt/grafana
+    cd /opt/grafana
+    cat > Dockerfile <<EOF
+    FROM debian:stable
+    RUN apt-get update && apt-get install -y adduser libfontconfig1 wget
+    RUN wget https://dl.grafana.com/enterprise/release/grafana-enterprise_10.0.3_amd64.deb
+    RUN apt-get install -y ./grafana-enterprise_10.0.3_amd64.deb
+    CMD ["grafana-server", "--homepath=/usr/share/grafana"]
+    EOF
+    docker build -t custom-grafana .
+
+- name: Run Grafana container
+  docker_container:
+    name: grafana
+    image: custom-grafana
+    state: started
+    restart_policy: always
+    ports:
+      - "3000:3000"

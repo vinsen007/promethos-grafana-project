@@ -1,0 +1,31 @@
+- name: Create Prometheus directory
+  file:
+    path: /opt/prometheus
+    state: directory
+
+- name: Copy Prometheus config
+  copy:
+    src: prometheus.yml
+    dest: /opt/prometheus/prometheus.yml
+
+- name: Build Prometheus Docker image
+  shell: |
+    mkdir -p /opt/prometheus/build
+    cd /opt/prometheus/build
+    cat > Dockerfile <<EOF
+    FROM golang:1.21
+    RUN git clone https://github.com/prometheus/prometheus.git &&         cd prometheus && make build
+    CMD ["./prometheus/prometheus", "--config.file=/etc/prometheus/prometheus.yml"]
+    EOF
+    docker build -t custom-prometheus .
+
+- name: Run Prometheus container
+  docker_container:
+    name: prometheus
+    image: custom-prometheus
+    state: started
+    restart_policy: always
+    ports:
+      - "9090:9090"
+    volumes:
+      - /opt/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml

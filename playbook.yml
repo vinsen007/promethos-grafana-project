@@ -1,0 +1,7 @@
+- hosts: monitoring
+  become: true
+  roles:
+    - docker
+    - prometheus
+    - node_exporter
+    - grafana
